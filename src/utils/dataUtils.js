@@ -3,7 +3,9 @@ import Papa from 'papaparse';
 
 const loadRawData = async () => {
   try {
-    const response = await fetch('/running_data.csv');
+    // Utiliser un chemin relatif au repo GitHub
+    const BASE_URL = import.meta.env.PROD ? '/Running-progress' : '';
+    const response = await fetch(`${BASE_URL}/running_data.csv`);
     const text = await response.text();
     
     return new Promise((resolve, reject) => {
@@ -45,14 +47,10 @@ export const parsePace = (paceStr) => {
   try {
     if (!paceStr) return 0;
     const cleanPace = paceStr.trim();
-    // Si la chaîne ne contient pas les 5 derniers caractères (MM:SS), retourner 0
     if (cleanPace.length < 5) return 0;
     
-    // Extraire les derniers 5 caractères (format MM:SS)
     const timeStr = cleanPace.slice(-5);
     const [minutes, seconds] = timeStr.split(':').map(Number);
-    
-    console.log(`Parsing pace: ${timeStr} -> ${minutes}:${seconds} -> ${minutes + seconds / 60}`);
     
     if (isNaN(minutes) || isNaN(seconds)) return 0;
     return minutes + seconds / 60;
@@ -65,11 +63,9 @@ export const parsePace = (paceStr) => {
 export const formatPace = (pace) => {
   if (!pace) return "0:00";
   
-  const totalSeconds = Math.round(pace * 60); // Convertir le temps en secondes
+  const totalSeconds = Math.round(pace * 60);
   const minutes = Math.floor(totalSeconds / 60);
   const seconds = totalSeconds % 60;
-  
-  console.log(`Formatting pace: ${pace} -> ${totalSeconds}s -> ${minutes}:${seconds}`);
   
   return `${minutes}:${seconds.toString().padStart(2, '0')}`;
 };
@@ -102,14 +98,6 @@ const parseRow = (row) => {
     const parsedDistance = parseFloat(distance.replace(',', '.'));
     const timeInMinutes = parseTime(time);
     const paceInMinutes = parsePace(pace);
-
-    console.log('Parsed row:', {
-      date: `${year}-${month}-${day}`,
-      distance: parsedDistance,
-      time: timeInMinutes,
-      pace: paceInMinutes,
-      originalPace: pace
-    });
 
     return {
       date: new Date(year, month - 1, day),
